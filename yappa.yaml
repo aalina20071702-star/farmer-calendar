@@ -1,0 +1,20 @@
+functions:
+  farmer-api:
+    runtime: python310
+    entrypoint: api.app
+    handler: yappa.handler
+    memory: 256
+    execution_timeout: 30
+    environment:
+      YC_FOLDER_ID: b1geruhtjdh8rdonf9m9
+      YC_API_KEY: AQVNxM4Y1Wk3qYM2Nb2umPY1phdkgneEToFt0NOT
+    sources:
+      - api.py
+      - utils/database.py
+      - data/
+    requirements:
+      - fastapi
+      - uvicorn
+      - pandas
+      - requests
+      - yappa

@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Календарь фермера — Своё Родное</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg: #f9f6f0;
+            --card: #ffffff;
+            --glass: rgba(255,255,255,0.75);
+            --green: #4a7c2e;
+            --green-dark: #2d5016;
+            --gold: #c8a96e;
+            --text: #2d1f0e;
+            --text-secondary: #6b5d3e;
+            --red: #e74c3c;
+            --orange: #f39c12;
+            --teal: #27ae60;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            min-height: 100vh;
+            color: var(--text);
+            overflow-x: hidden;
+        }
+
+        .parallax-leaf {
+            position: fixed; pointer-events: none; z-index: 0;
+            font-size: 120px; opacity: 0.05;
+            transition: transform 0.15s ease-out; user-select: none;
+        }
+        .leaf-1 { top: 3%; left: -2%; font-size: 170px; }
+        .leaf-2 { top: 20%; right: -3%; font-size: 140px; }
+        .leaf-3 { bottom: 18%; left: 2%; font-size: 110px; }
+        .leaf-4 { top: 50%; right: 3%; font-size: 95px; }
+        .leaf-5 { bottom: 5%; right: 12%; font-size: 150px; }
+
+        .bg-orb {
+            position: fixed; border-radius: 50%;
+            filter: blur(140px); opacity: 0.10;
+            pointer-events: none; z-index: 0;
+            animation: orbFloat 25s ease-in-out infinite;
+        }
+        .bg-orb-1 { width: 700px; height: 700px; background: #c8a96e; top: -250px; left: -250px; }
+        .bg-orb-2 { width: 550px; height: 550px; background: #4a7c2e; bottom: -200px; right: -200px; animation-delay: -10s; }
+        .bg-orb-3 { width: 450px; height: 450px; background: #8b7a5a; top: 40%; left: 45%; animation-delay: -18s; }
+
+        @keyframes orbFloat {
+            0%, 100% { transform: translate(0,0) scale(1); }
+            25% { transform: translate(70px, -50px) scale(1.15); }
+            50% { transform: translate(-40px, 60px) scale(0.85); }
+            75% { transform: translate(-60px, -30px) scale(1.1); }
+        }
+
+        .hero {
+            position: relative; z-index: 1;
+            background: linear-gradient(160deg, #1a3008 0%, #2d5016 30%, #3d6a1e 60%, #4a7c2e 100%);
+            padding: 55px 0; overflow: hidden;
+        }
+        .hero::before {
+            content: ''; position: absolute;
+            width: 900px; height: 900px;
+            background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%);
+            top: -350px; right: -250px; border-radius: 50%;
+        }
+        .hero::after {
+            content: ''; position: absolute;
+            width: 500px; height: 500px;
+            background: radial-gradient(circle, rgba(200,169,110,0.12) 0%, transparent 70%);
+            bottom: -200px; left: -150px; border-radius: 50%;
+        }
+        .hero-content {
+            max-width: 1200px; margin: 0 auto; padding: 0 30px;
+            position: relative; z-index: 1;
+        }
+        .hero h1 { font-size: 3.5rem; font-weight: 900; color: #fff; letter-spacing: -0.04em; }
+        .hero h1 span { color: #c8a96e; }
+        .hero p { font-size: 1.2rem; color: rgba(255,255,255,0.7); margin-top: 8px; }
+
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 30px; position: relative; z-index: 1; }
+
+        .tabs-sticky {
+            position: sticky; top: 16px; z-index: 50;
+            margin-top: -22px; padding-bottom: 16px;
+        }
+        .tabs {
+            display: flex; gap: 6px;
+            background: var(--glass);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border-radius: 20px; padding: 6px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255,255,255,0.5);
+            flex-wrap: wrap;
+        }
+        .tab-btn {
+            flex: 1; min-width: 80px; padding: 12px 10px;
+            border: none; border-radius: 16px;
+            font-size: 0.8rem; font-weight: 600; cursor: pointer;
+            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            background: transparent; color: var(--text-secondary);
+        }
+        .tab-btn:hover { background: rgba(255,255,255,0.6); }
+        .tab-btn.active {
+            background: linear-gradient(135deg, var(--green), #5a8f3a);
+            color: #fff; box-shadow: 0 8px 24px rgba(74,124,46,0.3);
+        }
+
+        .controls {
+            display: flex; gap: 10px; align-items: center;
+            padding: 12px 0 8px; flex-wrap: wrap;
+        }
+        .search-box {
+            flex: 1; min-width: 180px;
+            padding: 10px 16px;
+            border: 2px solid #e5ddc8; border-radius: 14px;
+            font-size: 0.85rem; font-family: 'Inter', sans-serif;
+            background: white; transition: all 0.2s ease;
+        }
+        .search-box:focus { outline: none; border-color: var(--green); box-shadow: 0 0 0 4px rgba(74,124,46,0.1); }
+
+        .region-select {
+            padding: 10px 32px 10px 16px;
+            border: 2px solid #e5ddc8; border-radius: 14px;
+            font-size: 0.85rem; font-family: 'Inter', sans-serif;
+            background: white; cursor: pointer; min-width: 170px;
+            appearance: none; -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b5d3e' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat; background-position: right 12px center;
+        }
+
+        .demo-select {
+            padding: 10px 14px;
+            border: 2px dashed #c8a96e; border-radius: 14px;
+            font-size: 0.85rem; font-family: 'Inter', sans-serif;
+            background: #fffdf5; cursor: pointer; min-width: 160px;
+        }
+
+        .view-toggle {
+            display: flex; gap: 4px;
+            background: white; border-radius: 12px;
+            padding: 4px; border: 2px solid #e5ddc8;
+        }
+        .view-btn {
+            padding: 8px 14px; border: none; border-radius: 10px;
+            font-size: 0.8rem; font-weight: 600; cursor: pointer;
+            transition: all 0.2s ease; background: transparent; color: var(--text-secondary);
+        }
+        .view-btn.active { background: var(--green); color: white; box-shadow: 0 4px 12px rgba(74,124,46,0.25); }
+
+        .legend {
+            display: flex; gap: 14px; align-items: center;
+            padding: 8px 4px; font-size: 0.78rem; color: var(--text-secondary);
+            flex-wrap: wrap;
+        }
+        .legend-item { display: flex; align-items: center; gap: 6px; }
+        .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+        .legend-dot.high { background: var(--teal); }
+        .legend-dot.medium { background: var(--orange); }
+        .legend-dot.low { background: var(--red); }
+
+        .cards-view {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 22px; padding: 10px 0 40px;
+        }
+
+        .calendar-view { display: none; padding: 10px 0 40px; }
+        .calendar-view.active { display: block; }
+
+        .card {
+            background: var(--card); border-radius: 24px; overflow: hidden;
+            box-shadow: 0 2px 16px rgba(0,0,0,0.04);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer; border: 1px solid rgba(0,0,0,0.04);
+            animation: cardIn 0.5s ease forwards; opacity: 0;
+        }
+        @keyframes cardIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .card:hover { transform: translateY(-8px); box-shadow: 0 20px 40px rgba(0,0,0,0.12); }
+        .card-img {
+            height: 190px; position: relative; overflow: hidden;
+            background-size: cover; background-position: center;
+        }
+        .card:hover .card-img { transform: scale(1.05); transition: transform 0.5s ease; }
+        .card-img .overlay {
+            position: absolute; bottom: 0; left: 0; right: 0;
+            height: 60px; background: linear-gradient(transparent, rgba(0,0,0,0.4));
+        }
+        .card-body { padding: 18px 20px 20px; }
+        .card-badge {
+            display: inline-block; padding: 5px 12px; border-radius: 20px;
+            font-size: 0.75rem; font-weight: 600; margin-bottom: 8px;
+        }
+        .badge-holiday { background: #ffeaea; color: #b33030; }
+        .badge-season { background: #e8f5e0; color: #3d6a1e; }
+        .badge-event { background: #e4efff; color: #2c5282; }
+        .card h3 { font-size: 1.15rem; font-weight: 700; margin-bottom: 4px; }
+        .card .meta { font-size: 0.82rem; color: var(--text-secondary); }
+
+        .month-header {
+            font-size: 1.3rem; font-weight: 700; margin: 24px 0 12px;
+            padding: 8px 0; color: var(--green-dark);
+            border-bottom: 2px solid #e5ddc8;
+        }
+        .weekdays {
+            display: grid; grid-template-columns: repeat(7, 1fr);
+            gap: 6px; margin-bottom: 6px;
+        }
+        .weekday {
+            text-align: center; font-size: 0.78rem; font-weight: 600;
+            color: var(--text-secondary); padding: 8px 0;
+        }
+        .days-grid {
+            display: grid; grid-template-columns: repeat(7, 1fr);
+            gap: 6px;
+        }
+        .day-cell {
+            aspect-ratio: 1; border-radius: 14px;
+            padding: 8px; font-size: 0.85rem;
+            background: white; border: 1px solid #e5ddc8;
+            cursor: default; transition: all 0.2s ease;
+            position: relative; min-height: 80px;
+        }
+        .day-cell.has-event {
+            cursor: pointer;
+            background: linear-gradient(135deg, #f0f7ed, #e8f5e0);
+            border-color: var(--green); border-width: 2px;
+        }
+        .day-cell.has-event:hover {
+            background: var(--green); color: white;
+            transform: scale(1.03); box-shadow: 0 6px 16px rgba(74,124,46,0.25);
+        }
+        .day-cell .day-num { font-weight: 700; margin-bottom: 2px; }
+        .day-cell .event-dot {
+            font-size: 0.65rem; font-weight: 600;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+
+        .modal-overlay {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.4);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            z-index: 100;
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .modal-overlay.active { opacity: 1; pointer-events: all; }
+        .modal {
+            background: #fff; border-radius: 28px;
+            max-width: 750px; width: 92%; max-height: 85vh;
+            overflow-y: auto; padding: 32px;
+            box-shadow: 0 40px 80px rgba(0,0,0,0.25);
+            transform: translateY(20px);
+            transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .modal-overlay.active .modal { transform: translateY(0); }
+        .modal h2 { font-size: 1.6rem; font-weight: 800; margin-bottom: 4px; }
+        .modal .dates { font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 16px; }
+
+        .post-block {
+            background: linear-gradient(135deg, #fdfaf3, #f7f2e4);
+            border-left: 5px solid var(--gold);
+            border-radius: 0 16px 16px 0;
+            padding: 18px 20px; margin-bottom: 8px;
+            line-height: 1.6; font-size: 0.9rem;
+        }
+        .copy-btn {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 8px 16px;
+            background: var(--green); color: white;
+            border: none; border-radius: 10px;
+            font-size: 0.8rem; font-weight: 600; cursor: pointer;
+            transition: all 0.2s ease; margin-top: 8px;
+        }
+        .copy-btn:hover { background: var(--green-dark); }
+
+        .channel-tabs { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+        .channel-tab {
+            padding: 8px 14px; border-radius: 20px;
+            border: 2px solid #e5ddc8; background: white;
+            color: #6b5d3e; font-weight: 600; cursor: pointer;
+            font-size: 0.78rem; transition: all 0.2s ease;
+            font-family: 'Inter', sans-serif;
+        }
+        .channel-tab.active { background: #4a7c2e; color: white; border-color: #4a7c2e; }
+        .channel-tab:hover { border-color: #4a7c2e; }
+
+        .accordion { margin-bottom: 8px; }
+        .accordion-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 12px 16px;
+            background: #f5f0e5; border-radius: 14px;
+            cursor: pointer; font-weight: 600;
+            font-size: 0.9rem; color: var(--text);
+            transition: all 0.2s ease; border: 1px solid transparent;
+        }
+        .accordion-header:hover { background: #ede5d5; border-color: #d4c9a8; }
+        .accordion-header .arrow { font-size: 0.7rem; transition: transform 0.3s ease; }
+        .accordion.open .accordion-header .arrow { transform: rotate(180deg); }
+        .accordion-body { max-height: 0; overflow: hidden; transition: max-height 0.4s ease; }
+        .accordion.open .accordion-body { max-height: none; }
+
+        .product-item {
+            display: flex; align-items: center; gap: 12px;
+            padding: 12px 14px;
+            background: #faf7f2; border-radius: 12px;
+            margin: 4px 0 4px 8px;
+            transition: all 0.2s ease; border: 1px solid transparent;
+        }
+        .product-item:hover { background: #fff; border-color: #e5ddc8; box-shadow: 0 4px 12px rgba(0,0,0,0.04); }
+        .product-info { flex: 1; }
+        .product-info h4 { font-size: 0.9rem; font-weight: 600; }
+        .product-info p { font-size: 0.78rem; color: var(--text-secondary); }
+        .product-link {
+            padding: 8px 16px;
+            background: linear-gradient(135deg, var(--green), #5a8f3a);
+            color: #fff; border-radius: 10px; text-decoration: none;
+            font-size: 0.8rem; font-weight: 600; white-space: nowrap;
+            transition: all 0.2s ease;
+        }
+        .product-link:hover { background: var(--green-dark); box-shadow: 0 4px 12px rgba(74,124,46,0.3); }
+
+        .stock-indicator { display: flex; align-items: center; gap: 6px; font-size: 0.75rem; font-weight: 600; }
+        .stock-dot { width: 8px; height: 8px; border-radius: 50%; }
+        .stock-dot.high { background: var(--teal); }
+        .stock-dot.medium { background: var(--orange); }
+        .stock-dot.low { background: var(--red); }
+
+        .close-btn {
+            width: 100%; padding: 12px; margin-top: 12px;
+            border: 2px solid #e5ddc8; background: transparent;
+            border-radius: 14px; font-size: 0.9rem; font-weight: 600;
+            color: var(--text-secondary); cursor: pointer; transition: all 0.2s ease;
+        }
+        .close-btn:hover { background: #f5f0e5; border-color: var(--text-secondary); }
+
+        .toast {
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+            background: #2d1f0e; color: white; padding: 14px 28px;
+            border-radius: 14px; font-weight: 600; font-size: 0.9rem;
+            z-index: 200; opacity: 0; pointer-events: none;
+            transition: opacity 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        .toast.show { opacity: 1; }
+
+        .side-panel {
+            position: fixed; right: -420px; top: 0;
+            width: 400px; height: 100vh;
+            background: white;
+            box-shadow: -10px 0 40px rgba(0,0,0,0.15);
+            z-index: 90;
+            transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 20px; overflow-y: auto;
+        }
+        .side-panel.open { right: 0; }
+        .side-panel-toggle {
+            position: fixed; right: 20px; bottom: 30px;
+            width: 60px; height: 60px; border-radius: 50%;
+            background: linear-gradient(135deg, #4a7c2e, #5a8f3a);
+            color: white; border: none; font-size: 1.5rem;
+            cursor: pointer; z-index: 91;
+            box-shadow: 0 8px 24px rgba(74,124,46,0.4);
+            transition: all 0.3s ease;
+        }
+        .side-panel-toggle:hover { transform: scale(1.1); box-shadow: 0 12px 32px rgba(74,124,46,0.5); }
+
+        .footer { text-align: center; padding: 20px 0 30px; color: #b0a590; font-size: 0.8rem; position: relative; z-index: 1; }
+
+        #myProductsView { display: none; padding: 10px 0 40px; }
+
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 2rem; }
+            .cards-view { grid-template-columns: 1fr; }
+            .tabs { flex-wrap: wrap; }
+            .tab-btn { flex: unset; font-size: 0.75rem; padding: 8px 10px; }
+            .controls { flex-direction: column; }
+            .search-box { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="parallax-leaf leaf-1">🌿</div>
+<div class="parallax-leaf leaf-2">🍃</div>
+<div class="parallax-leaf leaf-3">🌱</div>
+<div class="parallax-leaf leaf-4">🪴</div>
+<div class="parallax-leaf leaf-5">🍂</div>
+<div class="bg-orb bg-orb-1"></div>
+<div class="bg-orb bg-orb-2"></div>
+<div class="bg-orb bg-orb-3"></div>
+
+<header class="hero">
+    <div class="hero-content">
+        <h1>🌾 Календарь <span>фермера</span></h1>
+        <p>Умный событийный маркетинг для роста продаж на «Своё Родное»</p>
+    </div>
+</header>
+
+<div id="onboarding" style="background:#e8f5e0;border:2px solid #4a7c2e;border-radius:16px;padding:16px 20px;margin:0 30px 16px 30px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;position:relative;z-index:1;">
+    <span style="font-size:1.5rem;">👋</span>
+    <span style="flex:1;font-size:0.9rem;"><strong>Добро пожаловать!</strong> Выберите событие в календаре → получите план действий, готовые тексты и прогноз продаж. <strong>2–3 клика — и акция запущена!</strong></span>
+    <button onclick="document.getElementById('onboarding').style.display='none';localStorage.setItem('onboarding','hidden')" style="background:transparent;border:none;font-size:1.2rem;cursor:pointer;">✕</button>
+</div>
+
+<div class="container">
+    <div class="tabs-sticky">
+        <div class="tabs">
+            <button class="tab-btn active" data-filter="all">📋 Все</button>
+            <button class="tab-btn" data-filter="праздник">🎉 Праздники</button>
+            <button class="tab-btn" data-filter="сезонность">🌱 Сезоны</button>
+            <button class="tab-btn" data-filter="ивент">⚡ Ивенты</button>
+            <button class="tab-btn" data-filter="my_products">🗺️ Карта сайта</button>
+        </div>
+    </div>
+
+    <div class="controls" id="controlsBar">
+        <input type="text" class="search-box" id="searchBox" placeholder="🔍 Поиск по названию, дате, типу...">
+        <select class="region-select" id="regionFilter"><option value="all">📍 Все регионы</option></select>
+        <div class="view-toggle" id="viewToggle">
+            <button class="view-btn active" data-view="cards">🃏 Карточки</button>
+            <button class="view-btn" data-view="calendar">📅 Календарь</button>
+        </div>
+        <span style="font-size:0.65rem;color:#c8a96e;font-weight:700;">ДЕМО</span>
+        <select class="demo-select" id="farmerSelect" onchange="switchFarmer(this.value)"><option value="all">👨‍🌾 Все фермеры</option></select>
+    </div>
+    <div class="legend" id="legendBar">
+        <span style="font-weight:600;">Остатки:</span>
+        <div class="legend-item"><div class="legend-dot high"></div> Много (>50)</div>
+        <div class="legend-item"><div class="legend-dot medium"></div> Средне (10–50)</div>
+        <div class="legend-item"><div class="legend-dot low"></div> Мало (<10)</div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="cards-view" id="cardsView"></div>
+    <div class="calendar-view" id="calendarView"></div>
+    <div id="myProductsView"></div>
+</div>
+
+<div class="modal-overlay" id="modalOverlay"><div class="modal" id="modalContent"></div></div>
+<div class="toast" id="toast"></div>
+
+<button class="side-panel-toggle" onclick="toggleSidePanel()">🤖</button>
+<div class="side-panel" id="sidePanel">
+    <h3>🤖 ИИ-агент</h3>
+    <div id="chatMessages" style="max-height:55vh;overflow-y:auto;margin:12px 0;"></div>
+    <div style="display:flex;gap:8px;">
+        <input type="text" id="chatInput" placeholder="Что продавать в мае?" style="flex:1;padding:10px;border:2px solid #e5ddc8;border-radius:10px;">
+        <button onclick="askAI()" style="padding:10px 16px;background:var(--green);color:white;border:none;border-radius:10px;cursor:pointer;">📤</button>
+    </div>
+    <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;">
+        <button onclick="quickAsk('Что продавать в мае?')" style="padding:6px 10px;background:#f5f0e5;border:1px solid #e5ddc8;border-radius:16px;font-size:0.7rem;cursor:pointer;">💡 Что продавать?</button>
+        <button onclick="quickAsk('Какие товары залежались?')" style="padding:6px 10px;background:#f5f0e5;border:1px solid #e5ddc8;border-radius:16px;font-size:0.7rem;cursor:pointer;">📦 Залежалось</button>
+        <button onclick="quickAsk('Предложи набор-паровоз')" style="padding:6px 10px;background:#f5f0e5;border:1px solid #e5ddc8;border-radius:16px;font-size:0.7rem;cursor:pointer;">🚂 Паровоз</button>
+    </div>
+</div>
+
+<div class="footer">🍃 <a href="https://svoe-rodnoe.ru" target="_blank" style="color:#4a7c2e;font-weight:600;">Своё Родное</a> — маркетплейс фермерских продуктов</div>
+<button onclick="document.getElementById('lkMockup').style.display='flex';loadLkMockupEvents()" style="margin:10px auto;display:block;padding:8px 20px;background:transparent;border:2px solid #c8a96e;border-radius:10px;color:#8b7a5a;cursor:pointer;font-weight:600;font-size:0.85rem;">📱 Как это встроится в ЛК?</button>
+
+<div id="lkMockup" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:200;align-items:center;justify-content:center;" onclick="this.style.display='none'">
+    <div style="background:white;border-radius:24px;padding:40px;max-width:650px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.3);" onclick="event.stopPropagation()">
+        <h3 style="margin-bottom:6px;">📱 Так сервис выглядит в ЛК фермера</h3>
+        <p style="color:#8b7a5a;margin-bottom:20px;">Вкладка «Календарь» уже работает</p>
+        <div style="background:#f5f0e5;border-radius:20px;padding:24px;text-align:left;">
+            <div style="display:flex;gap:8px;margin-bottom:20px;">
+                <div style="background:#4a7c2e;color:white;padding:10px 18px;border-radius:12px;font-weight:700;">📅 Календарь</div>
+                <div style="background:white;padding:10px 18px;border-radius:12px;color:#b0a590;border:1px dashed #d4c9a8;">🛒 Товары</div>
+                <div style="background:white;padding:10px 18px;border-radius:12px;color:#b0a590;border:1px dashed #d4c9a8;">📊 Статистика</div>
+            </div>
+            <div style="background:white;border-radius:16px;padding:20px;">
+                <p style="font-weight:700;margin-bottom:12px;">📋 Ближайшие события</p>
+                <div id="lkMockupEvents">⏳ Загрузка...</div>
+            </div>
+            <div style="margin-top:16px;display:flex;flex-direction:column;gap:6px;font-size:0.85rem;">
+                <div>✅ Выберите событие</div>
+                <div>✅ Получите план и тексты</div>
+                <div>✅ Запустите акцию в 2 клика</div>
+                <div>✅ Отследите рост продаж</div>
+            </div>
+        </div>
+        <button onclick="document.getElementById('lkMockup').style.display='none'" style="margin-top:20px;padding:12px 28px;background:#4a7c2e;color:white;border:none;border-radius:12px;cursor:pointer;font-weight:600;">Закрыть</button>
+    </div>
+</div>
+
+<script>
+const API = 'http://91.245.227.88:8000';
+let allEvents = [], currentFilter = 'all', currentFarmer = 'all', searchQuery = '';
+
+async function load() {
+    try {
+        const r = await fetch(`${API}/api/events`);
+        allEvents = await r.json();
+        try {
+            const rr = await fetch(`${API}/api/regions`);
+            const regions = await rr.json();
+            const s = document.getElementById('regionFilter');
+            regions.forEach(r => { const o = document.createElement('option'); o.value = r; o.textContent = r; s.appendChild(o); });
+        } catch(e) {}
+        try {
+            const fr = await fetch(`${API}/api/farmers`);
+            const farmers = await fr.json();
+            const fs = document.getElementById('farmerSelect');
+            farmers.forEach(f => { const o = document.createElement('option'); o.value = f.organization_id; o.textContent = f.shop_name; fs.appendChild(o); });
+        } catch(e) {}
+        applyFiltersAndRender();
+    } catch(e) {
+        document.getElementById('cardsView').innerHTML = '<p style="text-align:center;padding:60px;">⚠️ Запустите api.py</p>';
+    }
+}
+
+function switchFarmer(id) { currentFarmer = id; if (currentEventId) openEvent(currentEventId); }
+
+function applyFiltersAndRender() {
+    let events = allEvents;
+    if (currentFilter !== 'all') events = events.filter(e => e.event_type === currentFilter);
+    if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        events = events.filter(e => e.event_name.toLowerCase().includes(q) || e.event_type.toLowerCase().includes(q) || e.start_date.includes(q) || e.end_date.includes(q) || e.target_audience.toLowerCase().includes(q) || e.category_tags.toLowerCase().includes(q));
+    }
+    renderCards(events);
+    renderCalendar(events);
+}
+
+function renderCards(events) {
+    const c = document.getElementById('cardsView');
+    if (!events.length) { c.innerHTML = '<p style="text-align:center;padding:60px;">Ничего не найдено</p>'; return; }
+    const emb = { 'праздник': '🎉', 'сезонность': '🌱', 'ивент': '⚡' };
+    const bad = { 'праздник': 'badge-holiday', 'сезонность': 'badge-season', 'ивент': 'badge-event' };
+    c.innerHTML = events.map((e, i) => {
+        const s = new Date(e.start_date).toLocaleDateString('ru-RU');
+        const ed = new Date(e.end_date).toLocaleDateString('ru-RU');
+        return `<div class="card" onclick="openEvent(${e.event_id || 0})" style="animation-delay:${i*0.05}s"><div class="card-img" style="background-image:url('images/${e.event_id}.jpg')" onerror="this.style.background='linear-gradient(135deg,#e0e0e0,#f5f5f5)'"><div class="overlay"></div></div><div class="card-body"><span class="card-badge ${bad[e.event_type]}">${emb[e.event_type]} ${e.event_type}</span><h3>${e.event_name}</h3>                ${(() => {
+                    const today = new Date();
+                    const start = new Date(e.start_date);
+                    const diff = Math.ceil((start - today) / (1000 * 60 * 60 * 24));
+                    if (diff > 0 && diff <= 30) return `<p style="color:#e74c3c;font-weight:700;font-size:0.8rem;">⏰ Старт через ${diff} дн.</p>`;
+                    if (diff <= 0 && new Date(e.end_date) >= today) return `<p style="color:#27ae60;font-weight:700;font-size:0.8rem;">🟢 Идёт сейчас</p>`;
+                    return '';
+                })()}<p class="meta">📆 ${s} — ${ed}</p><p class="meta">👥 ${e.target_audience}</p></div></div>`;
+    }).join('');
+}
+
+function renderCalendar(events) {
+    const c = document.getElementById('calendarView');
+    if (!events.length) { c.innerHTML = ''; return; }
+    const months = {};
+    events.forEach(e => {
+        const d = new Date(e.start_date);
+        const k = `${d.getFullYear()}-${d.getMonth()}`;
+        if (!months[k]) months[k] = [];
+        months[k].push(e);
+    });
+    const mn = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+    const wd = ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
+    const emb = { 'праздник': '🎉', 'сезонность': '🌱', 'ивент': '⚡' };
+    let h = '';
+    for (const [k, me] of Object.entries(months)) {
+        const [y, m] = k.split('-').map(Number);
+        h += `<div class="month-header">${mn[m]} ${y}</div><div class="weekdays">${wd.map(d => `<div class="weekday">${d}</div>`).join('')}</div>`;
+        const fd = new Date(y, m, 1); let sd = fd.getDay(); if (sd === 0) sd = 7;
+        const dim = new Date(y, m+1, 0).getDate();
+        const cells = [];
+        for (let i = 1; i < sd; i++) cells.push('<div class="day-cell"></div>');
+        for (let d = 1; d <= dim; d++) {
+            const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+            const de = me.filter(e => ds >= e.start_date && ds <= e.end_date);
+            cells.push(`<div class="day-cell${de.length?' has-event':''}" onclick="${de.length?`openEvent(${de[0].event_id})`:''}"><div class="day-num">${d}</div>${de.map(e => `<div class="event-dot">${emb[e.event_type]} ${e.event_name.substring(0,12)}</div>`).join('')}</div>`);
+        }
+        h += `<div class="days-grid">${cells.join('')}</div>`;
+    }
+    c.innerHTML = h;
+}
+
+let currentEventId = null, channelCache = {};
+
+async function openEvent(id) {
+    currentEventId = id;
+    channelCache = {};
+    const r = await fetch(`${API}/api/events/${id}?farmer_id=${currentFarmer}`);
+    const d = await r.json();
+    const e = d.event, products = d.products || [];
+    const emb = { 'праздник': '🎉', 'сезонность': '🌱', 'ивент': '⚡' };
+    const groups = {};
+    products.forEach(p => { const cat = p.category || 'Прочее'; if (!groups[cat]) groups[cat] = []; groups[cat].push(p); });
+    const gsc = s => s > 50 ? 'high' : s >= 10 ? 'medium' : 'low';
+    const gsl = s => s > 50 ? 'Много' : s >= 10 ? 'Средне' : 'Мало';
+    let ph = '', ci = 0;
+    for (const [cat, items] of Object.entries(groups)) {
+        ci++;
+        ph += `<div class="accordion" id="acc_${id}_${ci}"><div class="accordion-header" onclick="document.getElementById('acc_${id}_${ci}').classList.toggle('open')"><span>📂 ${cat} (${items.length})</span><span class="arrow">▼</span></div><div class="accordion-body">${items.map(p => `<div class="product-item"><div class="product-info"><h4>${p.name_product}</h4><p>🏪 ${p.shop_name} · 📍 ${p.region}</p></div><div class="stock-indicator"><div class="stock-dot ${gsc(p.stock||0)}"></div><span>${gsl(p.stock||0)} (${p.stock||0} шт.)</span></div><a href="${p.url_product}" target="_blank" class="product-link">🔗</a></div>`).join('')}</div></div>`;
+    }
+    document.getElementById('modalContent').innerHTML = `
+        <h2>${emb[e.event_type]} ${e.event_name}</h2>
+        <p class="dates">📆 ${new Date(e.start_date).toLocaleDateString('ru-RU')} — ${new Date(e.end_date).toLocaleDateString('ru-RU')} | 👥 ${e.target_audience}</p>
+        ${d.roi ? `<div style="background:#e8f5e0;border:2px solid #4a7c2e;border-radius:18px;padding:20px;margin-bottom:20px;"><h3>📊 Прогноз</h3><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;"><div style="background:white;padding:12px;border-radius:12px;"><div style="font-size:0.75rem;color:#8b7a5a;">🔄 Доп. заказы</div><div style="font-size:1.3rem;font-weight:800;">+${d.roi.additional_repeat_orders}</div></div><div style="background:white;padding:12px;border-radius:12px;"><div style="font-size:0.75rem;color:#8b7a5a;">💰 Доп. выручка</div><div style="font-size:1.3rem;font-weight:800;">+${d.roi.total_additional_revenue.toLocaleString()} ₽</div></div></div></div>` : ''}
+        ${d.locomotive ? `<div style="background:#fff9e6;border:2px solid #ffc107;border-radius:18px;padding:20px;margin-bottom:20px;"><h3>💡 ${d.locomotive.set_name}</h3><p>${d.locomotive.description}</p><div style="margin-top:12px;padding:12px;background:white;border-radius:12px;text-align:center;"><span style="text-decoration:line-through;color:#999;">${d.locomotive.old_price} ₽</span> <span style="font-size:1.3rem;font-weight:800;color:#e74c3c;">${d.locomotive.new_price} ₽</span> <span style="background:#e74c3c;color:white;padding:4px 10px;border-radius:8px;">-${d.locomotive.discount}%</span></div><div style="margin-top:10px;text-align:center;"><a href="https://svoe-rodnoe.ru/partner/discounts/create" target="_blank" style="display:inline-block;padding:10px 24px;background:#e74c3c;color:white;text-decoration:none;border-radius:12px;font-weight:600;">🏷️ Создать скидку ${d.locomotive.discount}% в ЛК</a></div></div>` : ''}
+        ${!d.locomotive && d.products && d.products.length > 0 ? `<div style="background:#fff5f5;border:2px solid #e74c3c;border-radius:18px;padding:16px;margin-bottom:20px;"><p style="margin:0;font-size:0.9rem;">⚠️ У выбранного фермера недостаточно товаров для набора-паровоза. <a href="https://svoe-rodnoe.ru/partner/products/add" target="_blank" style="color:#e74c3c;font-weight:600;">Добавьте товары</a> в категориях: ${e.category_tags}</p></div>` : ''}
+        <div id="checklistBlock" style="background:white;border:2px solid #e5ddc8;border-radius:16px;padding:20px;margin-bottom:20px;"><h3>✅ План действий</h3><div id="checklistContent">⏳ Загружаю...</div></div>
+        <div class="channel-tabs"><button class="channel-tab active" onclick="switchChannel('post',${e.event_id})">📝 Пост</button><button class="channel-tab" onclick="switchChannel('stories',${e.event_id})">📱 Сторис</button><button class="channel-tab" onclick="switchChannel('push',${e.event_id})">🔔 Пуш</button><button class="channel-tab" onclick="switchChannel('blog',${e.event_id})">📖 Блог</button><button class="channel-tab" onclick="switchChannel('email',${e.event_id})">📧 Email</button></div>
+        <div class="post-block"><strong id="channelLabel">📝 Готовый пост:</strong><br><span id="channelContent">${e.base_post_text}</span></div>
+        <button class="copy-btn" onclick="copyChannelContent()">📋 Скопировать</button>
+        <h3 style="margin-top:20px;">🛒 Товары (${products.length})</h3>
+        ${ph || '<p>Товары не найдены</p>'}
+        <button onclick="window.print()" style="width:100%;padding:12px;margin-top:8px;border:2px solid #4a7c2e;background:white;border-radius:14px;font-size:0.9rem;font-weight:600;color:#4a7c2e;cursor:pointer;">🖨️ Скачать план</button>
+        <button class="close-btn" onclick="closeModal()">❌ Закрыть</button>`;
+    document.getElementById('modalOverlay').classList.add('active');
+    fetch(`${API}/api/events/${id}/checklist`).then(r => r.json()).then(d => {
+        if (d.checklist) document.getElementById('checklistContent').innerHTML = d.checklist.map(i => `<div style="display:flex;gap:12px;padding:12px 0;border-bottom:1px solid #f0ebe0;"><div style="background:#4a7c2e;color:white;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.8rem;flex-shrink:0;">${i.step}</div><div><div style="font-weight:600;">${i.action}</div><div style="font-size:0.8rem;color:#8b7a5a;">${i.detail}</div><div style="font-size:0.75rem;">📅 До ${i.deadline} | 📡 ${i.channel}</div></div></div>`).join('');
+    }).catch(() => document.getElementById('checklistContent').innerHTML = '⚠️ Не удалось');
+    setTimeout(() => { const first = document.querySelector('.accordion'); if (first) first.classList.add('open'); }, 100);
+}
+
+function switchChannel(ch, eid) {
+    document.querySelectorAll('.channel-tab').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+    const labels = { 'post':'📝 Пост','stories':'📱 Сторис','push':'🔔 Пуш','blog':'📖 Блог','email':'📧 Email' };
+    document.getElementById('channelLabel').textContent = labels[ch]+':';
+    if (channelCache[`${eid}_${ch}`]) { document.getElementById('channelContent').textContent = channelCache[`${eid}_${ch}`]; return; }
+    if (ch === 'post') return;
+    document.getElementById('channelContent').textContent = '⏳ Генерирую...';
+    fetch(`${API}/api/ai/content?event_id=${eid}&channel=${ch}`).then(r => r.json()).then(d => {
+        channelCache[`${eid}_${ch}`] = d.content;
+        document.getElementById('channelContent').textContent = d.content;
+    }).catch(() => document.getElementById('channelContent').textContent = '⚠️ Не удалось');
+}
+
+function copyChannelContent() { navigator.clipboard.writeText(document.getElementById('channelContent').textContent).then(() => showToast('📋 Скопировано!')); }
+function showToast(m) { const t = document.getElementById('toast'); t.textContent = m; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2500); }
+function closeModal() { document.getElementById('modalOverlay').classList.remove('active'); }
+document.getElementById('modalOverlay').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
+
+document.querySelectorAll('.tab-btn').forEach(b => b.addEventListener('click', function() {
+    document.querySelectorAll('.tab-btn').forEach(x => x.classList.remove('active'));
+    this.classList.add('active');
+    currentFilter = this.dataset.filter;
+    if (currentFilter === 'my_products') {
+        document.getElementById('cardsView').style.display = 'none';
+        document.getElementById('calendarView').style.display = 'none';
+        document.getElementById('calendarView').classList.remove('active');
+        document.getElementById('myProductsView').style.display = 'block';
+        document.getElementById('controlsBar').style.display = 'none';
+        document.getElementById('legendBar').style.display = 'none';
+        loadMyProducts();
+    } else {
+        document.getElementById('cardsView').style.display = 'grid';
+        document.getElementById('calendarView').style.display = 'none';
+        document.getElementById('calendarView').classList.remove('active');
+        document.getElementById('myProductsView').style.display = 'none';
+        document.getElementById('controlsBar').style.display = '';
+        document.getElementById('legendBar').style.display = '';
+        applyFiltersAndRender();
+    }
+}));
+
+document.getElementById('searchBox').addEventListener('input', function() { searchQuery = this.value; applyFiltersAndRender(); });
+
+document.querySelectorAll('.view-btn').forEach(b => b.addEventListener('click', function() {
+    document.querySelectorAll('.view-btn').forEach(x => x.classList.remove('active'));
+    this.classList.add('active');
+    if (this.dataset.view === 'cards') {
+        document.getElementById('cardsView').style.display = 'grid';
+        document.getElementById('calendarView').style.display = 'none';
+        document.getElementById('calendarView').classList.remove('active');
+    } else {
+        document.getElementById('cardsView').style.display = 'none';
+        document.getElementById('calendarView').style.display = 'block';
+        document.getElementById('calendarView').classList.add('active');
+    }
+}));
+
+async function loadMyProducts() {
+    const c = document.getElementById('myProductsView');
+    c.innerHTML = '<p style="text-align:center;padding:40px;">⏳ Загружаю...</p>';
+    try {
+        const fr = await fetch(`${API}/api/farmers`);
+        const farmers = await fr.json();
+        if (!farmers.length) { c.innerHTML = '<p>Нет данных</p>'; return; }
+        let h = '<h2>🗺️ Карта сайта фермера</h2><p style="color:#8b7a5a;font-size:0.85rem;margin-bottom:8px;">Просмотр ассортимента, остатков и популярности товаров.</p>';
+        h += '<div style="display:flex;gap:8px;margin-bottom:16px;"><a href="https://svoe-rodnoe.ru/partner/products/add" target="_blank" style="padding:8px 16px;background:#4a7c2e;color:white;border-radius:10px;text-decoration:none;font-size:0.8rem;font-weight:600;">➕ Добавить товар</a><a href="https://svoe-rodnoe.ru/partner/products" target="_blank" style="padding:8px 16px;background:white;border:2px solid #4a7c2e;color:#4a7c2e;border-radius:10px;text-decoration:none;font-size:0.8rem;font-weight:600;">✏️ Редактировать</a></div>';
+        h += '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:24px;">';
+        farmers.forEach(f => h += `<button onclick="showFarmerProducts('${String(f.organization_id).trim()}')" style="padding:10px 18px;background:white;border:2px solid #e5ddc8;border-radius:14px;cursor:pointer;font-weight:600;">🏪 ${f.shop_name} (${f.product_count})</button>`);
+        h += '</div><div id="farmerProductsList"></div>';
+        c.innerHTML = h;
+        showFarmerProducts(String(farmers[0].organization_id));
+    } catch(e) { c.innerHTML = '<p>⚠️ Не удалось</p>'; }
+}
+
+async function showFarmerProducts(fid) {
+    const c = document.getElementById('farmerProductsList');
+    c.innerHTML = '<p>⏳ Загружаю...</p>';
+    try {
+        const r = await fetch(`${API}/api/farmer/${fid}/products`);
+        const p = await r.json();
+        if (!p || !p.length) { c.innerHTML = '<p>У этого фермера нет товаров</p>'; return; }
+        const gsc = s => s > 50 ? 'high' : s >= 10 ? 'medium' : 'low';
+        const gsl = s => s > 50 ? 'Много' : s >= 10 ? 'Средне' : 'Мало';
+        c.innerHTML = `<div style="background:white;border-radius:20px;padding:20px;"><h3>🛒 Товары (${p.length})</h3>${p.map(x => `<div style="display:flex;align-items:center;gap:12px;padding:12px;background:#faf7f2;border-radius:12px;margin-bottom:8px;"><div style="flex:1;"><strong>${x.name_product}</strong><p style="font-size:0.8rem;color:#8b7a5a;">📂 ${x.category} | ⭐ ${Math.round((x.popularity||0)*100)}%</p></div><div class="stock-indicator"><div class="stock-dot ${gsc(x.stock||0)}"></div><span>${gsl(x.stock||0)} (${x.stock||0} шт.)</span></div><a href="${x.url_product}" target="_blank" style="padding:6px 14px;background:#4a7c2e;color:white;border-radius:8px;text-decoration:none;font-size:0.8rem;">🔗</a></div>`).join('')}</div>`;
+    } catch(e) { c.innerHTML = '<p>⚠️ Ошибка</p>'; }
+}
+
+async function askAI() {
+    const inp = document.getElementById('chatInput'), msg = document.getElementById('chatMessages');
+    const q = inp.value.trim(); if (!q) return;
+    msg.innerHTML += `<div style="text-align:right;margin-bottom:12px;"><span style="background:#4a7c2e;color:white;padding:10px 16px;border-radius:16px 16px 4px 16px;display:inline-block;max-width:80%;">${q}</span></div>`;
+    inp.value = '';
+    msg.innerHTML += `<div style="margin-bottom:12px;"><span style="background:#f5f0e5;padding:10px 16px;border-radius:16px 16px 16px 4px;display:inline-block;">🤔 Анализирую...</span></div>`;
+    msg.scrollTop = msg.scrollHeight;
+    try {
+        const r = await fetch(`${API}/api/ai/ask?query=${encodeURIComponent(q)}`);
+        const d = await r.json();
+        msg.lastElementChild.innerHTML = `<span style="background:#f5f0e5;padding:10px 16px;border-radius:16px 16px 16px 4px;display:inline-block;max-width:80%;white-space:pre-wrap;">${d.answer}</span>`;
+    } catch(e) {
+        msg.lastElementChild.innerHTML = `<span style="background:#ffeaea;padding:10px 16px;border-radius:16px 16px 16px 4px;">⚠️ ИИ недоступен</span>`;
+    }
+}
+
+function quickAsk(q) { document.getElementById('chatInput').value = q; askAI(); }
+document.getElementById('chatInput').addEventListener('keypress', e => { if (e.key === 'Enter') askAI(); });
+function toggleSidePanel() { document.getElementById('sidePanel').classList.toggle('open'); }
+
+async function loadLkMockupEvents() {
+    try {
+        const r = await fetch(`${API}/api/events`);
+        const events = await r.json();
+        const today = new Date();
+        const upcoming = events.filter(e => new Date(e.end_date) >= today).sort((a,b) => new Date(a.start_date) - new Date(b.start_date)).slice(0,3);
+        const emb = { 'праздник': '🎉', 'сезонность': '🌱', 'ивент': '⚡' };
+        document.getElementById('lkMockupEvents').innerHTML = upcoming.map(e => `<div style="display:flex;align-items:center;gap:10px;padding:10px;background:#f0f7ed;border-radius:10px;"><span>${emb[e.event_type]}</span><span style="font-weight:600;">${e.event_name}</span><span style="font-size:0.8rem;color:#8b7a5a;">${new Date(e.start_date).toLocaleDateString('ru-RU')} – ${new Date(e.end_date).toLocaleDateString('ru-RU')}</span><span style="margin-left:auto;background:#4a7c2e;color:white;padding:4px 10px;border-radius:6px;font-size:0.75rem;">▶ Запустить</span></div>`).join('');
+    } catch(e) { document.getElementById('lkMockupEvents').innerHTML = 'Не удалось загрузить'; }
+}
+
+document.addEventListener('mousemove', e => {
+    document.querySelectorAll('.parallax-leaf').forEach((l, i) => {
+        l.style.transform = `translate(${(e.clientX/window.innerWidth-0.5)*(20+i*10)}px, ${(e.clientY/window.innerHeight-0.5)*(20+i*10)}px)`;
+    });
+});
+
+load();
+
+if (localStorage.getItem('onboarding') === 'hidden') {
+    document.getElementById('onboarding').style.display = 'none';
+}
+
+let viewedCount = 0;
+const origOpenEvent = openEvent;
+openEvent = async function(id) {
+    viewedCount++;
+    if (viewedCount <= 1) {
+        setTimeout(() => showToast(`📊 Вы просмотрели ${viewedCount} событие. Продолжайте планировать!`), 3000);
+    }
+    return origOpenEvent(id);
+};
+
+</script>
+</body>
+</html>

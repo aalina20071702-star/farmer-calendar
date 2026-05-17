@@ -1,0 +1,27 @@
+project_name: null
+project_slug: null
+description: null
+requirements_file: requirements.txt
+bucket: null
+application_type: null # wsgi/asgi/django/raw
+entrypoint: null
+django_settings_module: null
+folder_id: null
+gw_config: yappa_gw.yaml
+manage_function_name: null
+runtime: python39
+memory_limit: 128MB
+timeout: 1
+service_account_names:
+  creator: yappa-creator-service
+  function_actor: null
+excluded_paths:
+  - venv
+  - .git
+  - .idea
+  - .DS_Store
+  - .yc
+environment: { }
+named_service_accounts: { }
+service_account_id: null
+is_public: true # if function is accessible for non-authorized requests
