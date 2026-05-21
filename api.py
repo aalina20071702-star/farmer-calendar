@@ -12,6 +12,27 @@ API_KEY = os.getenv("YC_API_KEY", "AQVNxM4Y1Wk3qYM2Nb2umPY1phdkgneEToFt0NOT")
 
 import uvicorn
 
+SEASONALITY_MAP = {
+    "молочная продукция": {"low": [12, 1, 2], "note": "Зимой спрос стабилен"},
+    "ягоды": {"low": [11, 12, 1, 2, 3], "note": "Зимой только заморозка"},
+    "мёд": {"low": [], "note": "Стабильный спрос круглый год"},
+    "овощи": {"low": [12, 1, 2, 3], "note": "Зимой спрос на соленья"},
+    "фрукты": {"low": [12, 1, 2, 3, 4], "note": "Зимой цитрусовые и сухофрукты"},
+    "мясная продукция": {"low": [], "note": "Стабильный спрос круглый год"},
+    "сыр": {"low": [], "note": "Стабильный спрос круглый год"},
+    "кондитерские изделия": {"low": [6, 7, 8], "note": "Летом спрос ниже"},
+    "чай": {"low": [6, 7, 8], "note": "Летом спрос на холодные напитки"},
+    "травы": {"low": [11, 12, 1, 2], "note": "Зимой спрос на сушёные травы"},
+    "орехи": {"low": [], "note": "Стабильный спрос круглый год"},
+    "варенье": {"low": [6, 7, 8], "note": "Летом спрос на свежие ягоды"},
+    "соленья": {"low": [5, 6, 7, 8], "note": "Летом спрос ниже"},
+    "соки": {"low": [11, 12, 1, 2], "note": "Зимой спрос на согревающие напитки"},
+    "сухофрукты": {"low": [6, 7, 8], "note": "Летом спрос на свежие фрукты"},
+    "яйцо": {"low": [], "note": "Стабильный спрос круглый год"},
+    "выпечка": {"low": [6, 7, 8], "note": "Летом спрос чуть ниже"},
+    "зефир": {"low": [6, 7, 8], "note": "Летом спрос ниже"},
+}
+
 app = FastAPI(title="Календарь фермера API")
 
 # Разрешаем запросы из браузера
@@ -127,18 +148,12 @@ def event_detail(event_id: int, farmer_id: str = None):
     locomotive_revenue = locomotive_orders * (locomotive['new_price'] if locomotive else avg_check * 1.3)
 
     roi = {
-        "additional_repeat_orders": additional_repeat_orders,
-        "additional_revenue": additional_revenue,
-        "locomotive_orders": locomotive_orders,
-        "locomotive_revenue": locomotive_revenue,
-        "total_additional_revenue": additional_revenue + locomotive_revenue,
-        "assumptions": {
-            "avg_check": avg_check,
-            "base_monthly_orders": base_orders,
-            "current_repeat_rate": f"{int(repeat_rate * 100)}%",
-            "projected_repeat_rate": f"{int(new_repeat_rate * 100)}%",
-            "locomotive_conversion": f"{int(locomotive_conversion * 100)}%"
-        }
+        "expected_views_range": "100–500",
+        "expected_clicks_range": "10–50",
+        "expected_orders_range": "1–5",
+        "based_on": "Средние показатели фермеров на платформе за 2025 г.",
+        "note": "Реальные значения зависят от вашей аудитории, качества фото и текста. Это ориентир, а не гарантия.",
+        "repeat_note": "Повторные заказы растут в среднем на 5–10% при регулярном событийном маркетинге (данные платформы)"
     }
 
     return {
@@ -432,6 +447,54 @@ def event_checklist(event_id: int):
     }
 
 
+@app.get("/api/events/{event_id}/impact")
+def event_impact(event_id: int):
+    events = get_all_events()
+    event = next((e for e in events if e['event_id'] == event_id), None)
+    if not event:
+        return {"error": "Событие не найдено"}
+
+    products = get_products_for_event(event)
+    farmer_count = len(set(p['organization_id'] for p in products))
+
+    if len(products) > 50:
+        level = "высокое"
+        recommendation = "Рекомендуем готовиться за 2 недели"
+    elif len(products) > 10:
+        level = "среднее"
+        recommendation = "Можно запустить точечную акцию"
+    else:
+        level = "низкое"
+        recommendation = "Подходит узкой аудитории, акция по желанию"
+
+    return {
+        "level": level,
+        "matching_products": len(products),
+        "matching_farmers": farmer_count,
+        "recommendation": recommendation
+    }
+
+
+@app.get("/api/events/{event_id}/season")
+def event_season(event_id: int):
+    events = get_all_events()
+    event = next((e for e in events if e['event_id'] == event_id), None)
+    if not event:
+        return {"error": "Событие не найдено"}
+
+    month = int(event['start_date'].split('-')[1])
+    tags = [t.strip() for t in event['category_tags'].split(',')]
+
+    notes = []
+    for tag in tags:
+        if tag in SEASONALITY_MAP:
+            info = SEASONALITY_MAP[tag]
+            if month in info["low"]:
+                notes.append(f"⚠️ {tag}: {info['note']} — подсветите альтернативы")
+            else:
+                notes.append(f"✅ {tag}: сезон высокого спроса")
+
+    return {"month": month, "notes": notes}
 
 if __name__ == "__main__":
     import uvicorn
