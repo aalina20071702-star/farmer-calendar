@@ -604,6 +604,8 @@ async function openEvent(id) {
         <h2>${emb[e.event_type]} ${e.event_name}</h2>
         <p class="dates">📆 ${new Date(e.start_date).toLocaleDateString('ru-RU')} — ${new Date(e.end_date).toLocaleDateString('ru-RU')} | 👥 ${e.target_audience}</p>
         <div id="impactBadge" style="margin-bottom:12px;">⏳</div>
+        <div id="seasonNotes" style="margin-bottom:12px;font-size:0.8rem;color:#6b5d3e;"></div>
+
         ${d.roi ? `<div style="background:#f5f0e5;border:2px solid #d4c9a8;border-radius:18px;padding:20px;margin-bottom:20px;"><h3 style="margin:0 0 12px 0;">📊 Ориентировочные метрики</h3><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;text-align:center;"><div style="background:white;padding:14px;border-radius:12px;"><div style="font-size:0.75rem;color:#8b7a5a;">👁️ Просмотры</div><div style="font-size:1.2rem;font-weight:700;color:#2d5016;">${d.roi.expected_views_range}</div></div><div style="background:white;padding:14px;border-radius:12px;"><div style="font-size:0.75rem;color:#8b7a5a;">🖱️ Переходы</div><div style="font-size:1.2rem;font-weight:700;color:#2d5016;">${d.roi.expected_clicks_range}</div></div><div style="background:white;padding:14px;border-radius:12px;"><div style="font-size:0.75rem;color:#8b7a5a;">📦 Заказы</div><div style="font-size:1.2rem;font-weight:700;color:#2d5016;">${d.roi.expected_orders_range}</div></div></div><p style="font-size:0.72rem;color:#8b7a5a;margin-top:10px;line-height:1.4;">📌 ${d.roi.based_on}.<br>${d.roi.note}</p></div>` : ''}
         ${d.locomotive ? `<div style="background:#fff9e6;border:2px solid #ffc107;border-radius:18px;padding:20px;margin-bottom:20px;"><h3>💡 ${d.locomotive.set_name}</h3><p>${d.locomotive.description}</p><div style="margin-top:12px;padding:12px;background:white;border-radius:12px;text-align:center;"><span style="text-decoration:line-through;color:#999;">${d.locomotive.old_price} ₽</span> <span style="font-size:1.3rem;font-weight:800;color:#e74c3c;">${d.locomotive.new_price} ₽</span> <span style="background:#e74c3c;color:white;padding:4px 10px;border-radius:8px;">-${d.locomotive.discount}%</span></div><div style="margin-top:10px;text-align:center;"><a href="https://svoe-rodnoe.ru/partner/discounts/create" target="_blank" style="display:inline-block;padding:10px 24px;background:#e74c3c;color:white;text-decoration:none;border-radius:12px;font-weight:600;">🏷️ Создать скидку ${d.locomotive.discount}% в ЛК</a></div></div>` : ''}
         ${!d.locomotive && d.products && d.products.length > 0 ? `<div style="background:#fff5f5;border:2px solid #e74c3c;border-radius:18px;padding:16px;margin-bottom:20px;"><p style="margin:0;font-size:0.9rem;">⚠️ У выбранного фермера недостаточно товаров для набора-паровоза. <a href="https://svoe-rodnoe.ru/partner/products/add" target="_blank" style="color:#e74c3c;font-weight:600;">Добавьте товары</a> в категориях: ${e.category_tags}</p></div>` : ''}
@@ -620,6 +622,11 @@ async function openEvent(id) {
             if (d.level) {
                 const colors = {"высокое":"#27ae60","среднее":"#f39c12","низкое":"#95a5a6"};
                 document.getElementById('impactBadge').innerHTML = `<span style="background:${colors[d.level]};color:white;padding:6px 14px;border-radius:12px;font-size:0.8rem;">📈 Влияние: ${d.level} (${d.matching_products} товаров, ${d.matching_farmers} фермеров)</span>`;
+            }
+        });
+        fetch(`${API}/api/events/${id}/season`).then(r => r.json()).then(d => {
+            if (d.notes && d.notes.length > 0) {
+                document.getElementById('seasonNotes').innerHTML = d.notes.map(n => `<div>${n}</div>`).join('');
             }
         });
 
