@@ -7,8 +7,6 @@ from database import (init_db, load_events_from_csv, load_products_from_csv, get
 import os
 
 # Ключи для Яндекс.Облака
-FOLDER_ID = os.getenv("YC_FOLDER_ID", "b1geruhtjdh8rdonf9m9")
-API_KEY = os.getenv("YC_API_KEY", "AQVNxM4Y1Wk3qYM2Nb2umPY1phdkgneEToFt0NOT")
 
 import uvicorn
 
